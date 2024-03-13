@@ -1,6 +1,7 @@
 import os
 import random
 import streamlit as st
+from dotenv import load_dotenv
 
 #decorator
 def enable_chat_history(func):
@@ -39,7 +40,8 @@ def display_msg(msg, author):
     st.chat_message(author).write(msg)
 
 def configure_openai_api_key():
-    openai_api_key = st.sidebar.text_input(
+    load_dotenv()
+    openai_api_key = os.getenv('OPENAI_API_KEY') or st.sidebar.text_input(
         label="OpenAI API Key",
         type="password",
         value=st.session_state['OPENAI_API_KEY'] if 'OPENAI_API_KEY' in st.session_state else '',
