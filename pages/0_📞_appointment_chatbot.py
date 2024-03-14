@@ -4,6 +4,7 @@ from streaming import StreamHandler
 from langchain import hub
 # from langchain.llms import OpenAI
 from langchain_community.llms import OpenAI
+from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain.agents import Tool, initialize_agent
 from langchain.agents import AgentExecutor, create_openai_tools_agent, OpenAIFunctionsAgent 
 from langchain_core.messages import SystemMessage
@@ -35,13 +36,22 @@ class ContextChatbot:
             memory_key="memory", 
             return_messages=True
             )
-        life_tool = Tool(
-            name="Meaning-of-Life",
-            func=meaning_of_life,
-            description="Useful when you need to answer question like meaning of life."
-        )
-        tools = [life_tool]
-        _system_message = "Talk like Matt Mercer"
+
+        tools = [
+            utils.life_tool, 
+            utils.get_visits_tool, 
+            utils.set_visits_tool,
+            utils.get_date_time_tool,
+            TavilySearchResults(max_results=1)]
+        _system_message ="""
+        Assistant is a large language model.
+        Assistant is honest and polite, and is able to help user to make appointments.
+        However, assistant does not know anything about the event, before scheduling for
+        the user, the assistant needs to alway ask user about title of the event.
+        All day appointment means the user is busy all day, and cannot arrange more events.
+        New events should only be put between 8:00 and 17:00.
+        Unless user specifies, each new event should take 1 hour.
+        """
         prompt = OpenAIFunctionsAgent.create_prompt(
             system_message=SystemMessage(content=_system_message),
             extra_prompt_messages=[MessagesPlaceholder(variable_name="memory")],
@@ -73,17 +83,17 @@ class ContextChatbot:
             utils.display_msg(user_query, 'user')
             with st.chat_message("assistant"):
                 st_cb = StreamHandler(st.empty())
-                # response = chain(user_query, callbacks=[st_cb])
                 response = agent.invoke(
                     {"input": user_query}, 
                     {"callbacks": [st_cb]}
-                )
+                    )
                 print(response)
                 print(response['output'])
-                st.session_state.messages.append({"role": "assistant", "content": response['output']})
+                st.session_state.messages.append({
+                    "role": "assistant", 
+                    "content": response['output']
+                    })
 
-def meaning_of_life(input=""):
-    return 'The meaning of life is 42.'
 
 if __name__ == "__main__":
     obj = ContextChatbot()

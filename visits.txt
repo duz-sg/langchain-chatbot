@@ -1,0 +1,9 @@
+2024-03-14, All day, Appointment with Dentist
+2024-03-15, All day, Renew license
+2024-03-18, 14:00 - 16:00, Car service
+2024-03-18, 08:00 - 09:00, Meeting with Client
+2024-03-18, 10:00 - 11:00, Team Meeting
+2024-03-18, 12:00 - 13:00, Lunch with Colleagues
+2024-03-18, 13:00 - 14:00, Test Drive
+2024-03-18, 09:00 - 10:00, Lab Test
+2024-03-18, 09:00 - 10:00, Showroom Visit

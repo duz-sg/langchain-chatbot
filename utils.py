@@ -2,6 +2,8 @@ import os
 import random
 import streamlit as st
 from dotenv import load_dotenv
+from langchain.agents import Tool
+from datetime import datetime
 
 #decorator
 def enable_chat_history(func):
@@ -55,3 +57,72 @@ def configure_openai_api_key():
         st.info("Obtain your key from this link: https://platform.openai.com/account/api-keys")
         st.stop()
     return openai_api_key
+
+def meaning_of_life(input=""):
+    return 'The meaning of life is 42.'
+
+life_tool = Tool(
+    name="Meaning-of-Life",
+    func=meaning_of_life,
+    description = (
+        "Useful when you need to answer question about meaning of life."
+        "Should only be used to answer question about meaning of life."
+    )
+)
+
+def get_visits(input=""):
+    visits = ""
+    with open("visits.txt", "r") as f:
+        visits = f.readlines()
+    return visits
+
+get_visits_tool = Tool(
+    name="Get-current-visits",
+    func=get_visits,
+    description = (
+        "Useful when you need to answer question about user's visit plans for the future."
+        "All day appointment means the user is busy all day, and cannot arrange more events."
+        "New events should only be put between 8:00 and 17:00."
+        "Unless user specifies, each new event should take 1 hour."
+        # "Should only be used to answer question about meaning of life."
+    )
+)
+
+def set_visits(input=""):
+    visits = ""
+    with open("visits.txt", "a") as f:
+        f.write("\n")
+        f.write(input)
+    return
+
+set_visits_tool = Tool(
+    name="Set-new-visit",
+    func=set_visits,
+    description = (
+        "Useful when user wants to schedule a new event"
+        "Always confirm with the user about the event title"
+        "All day appointment means the user is busy all day, and cannot arrange more events."
+        "New events should only be put between 8:00 and 17:00."
+        "Unless user specifies, each new event should take 1 hour."
+        "Input is the event in the format as below:"
+        "{YYYY-MM-DD, Start time - Finish time, Evnet title}"
+    )
+)
+
+def get_date_time(input=""):
+    now = datetime.now()
+    local_now = now.astimezone()
+    local_tz = local_now.tzinfo
+    local_tzname = local_tz.tzname(local_now)
+    result = f"The date and time of today is {now}, {now.strftime('%A')}, {local_now}, {local_tz}, {local_tzname}"
+    print(result)
+    return result
+
+get_date_time_tool = Tool(
+    name="Get-current-date-and-time",
+    func=get_date_time,
+    description = (
+        "Useful when you need to answer question about current date time information."
+        # "Should only be used to answer question about meaning of life."
+    )
+)
