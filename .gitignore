@@ -1,2 +1,5 @@
 .env
 *.pyc
+token.json
+credentials.json
+test.py
