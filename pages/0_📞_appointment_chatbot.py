@@ -48,8 +48,11 @@ class ContextChatbot:
         Assistant is honest and polite, and is able to help user to make appointments.
         However, assistant does not know anything about the event, before scheduling for
         the user, the assistant needs to alway ask user about title of the event.
+        Assistant does not know anything about current year or date, to answer anything 
+        related to year, date, or time, the assistant needs to get the current date time first.
         All day appointment means the user is busy all day, and cannot arrange more events.
-        New events should only be put between 8:00 and 17:00.
+        New events should only be scheduled from Monday to Friday, between 8:00 and 17:00.
+        New events should not be scheduled on public holidays.
         Unless user specifies, each new event should take 1 hour.
         """
         prompt = OpenAIFunctionsAgent.create_prompt(

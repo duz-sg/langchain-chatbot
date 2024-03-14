@@ -81,10 +81,6 @@ get_visits_tool = Tool(
     func=get_visits,
     description = (
         "Useful when you need to answer question about user's visit plans for the future."
-        "All day appointment means the user is busy all day, and cannot arrange more events."
-        "New events should only be put between 8:00 and 17:00."
-        "Unless user specifies, each new event should take 1 hour."
-        # "Should only be used to answer question about meaning of life."
     )
 )
 
@@ -100,10 +96,6 @@ set_visits_tool = Tool(
     func=set_visits,
     description = (
         "Useful when user wants to schedule a new event"
-        "Always confirm with the user about the event title"
-        "All day appointment means the user is busy all day, and cannot arrange more events."
-        "New events should only be put between 8:00 and 17:00."
-        "Unless user specifies, each new event should take 1 hour."
         "Input is the event in the format as below:"
         "{YYYY-MM-DD, Start time - Finish time, Evnet title}"
     )
