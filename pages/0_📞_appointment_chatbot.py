@@ -38,10 +38,10 @@ class ContextChatbot:
             )
 
         tools = [
-            utils.life_tool, 
             utils.get_visits_tool, 
-            utils.set_visits_tool,
-            utils.get_date_time_tool,
+            utils.get_today_date_time_tool,
+            utils.get_day_of_date_time_tool,
+            utils.setGoogleCalendarTool,
             TavilySearchResults(max_results=1)]
         _system_message ="""
         Assistant is a large language model.
@@ -54,6 +54,7 @@ class ContextChatbot:
         New events should only be scheduled from Monday to Friday, between 8:00 and 17:00.
         New events should not be scheduled on public holidays.
         Unless user specifies, each new event should take 1 hour.
+        Unless user specifies, user should be located in the US, and use eastern time zone.
         """
         prompt = OpenAIFunctionsAgent.create_prompt(
             system_message=SystemMessage(content=_system_message),

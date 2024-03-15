@@ -3,6 +3,7 @@ import random
 import streamlit as st
 from dotenv import load_dotenv
 from langchain.agents import Tool
+from langchain_core.tools import tool, BaseTool
 import datetime as dt
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -66,19 +67,7 @@ def configure_openai_api_key():
         st.stop()
     return openai_api_key
 
-def meaning_of_life(input=""):
-    return 'The meaning of life is 42.'
-
-life_tool = Tool(
-    name="Meaning-of-Life",
-    func=meaning_of_life,
-    description = (
-        "Useful when you need to answer question about meaning of life."
-        "Should only be used to answer question about meaning of life."
-    )
-)
-
-def get_date_time(input=""):
+def get_today_date_time(input=""):
     now = dt.datetime.now()
     local_now = now.astimezone()
     local_tz = local_now.tzinfo
@@ -87,12 +76,31 @@ def get_date_time(input=""):
     print(result)
     return result
 
-get_date_time_tool = Tool(
+get_today_date_time_tool = Tool(
     name="Get-current-date-and-time",
-    func=get_date_time,
+    func=get_today_date_time,
     description = (
         "Useful when you need to answer question about current date time information."
-        # "Should only be used to answer question about meaning of life."
+    )
+)
+
+
+def get_day_of_date_time(input=""):
+    format = "%Y-%m-%d"
+    date = dt.datetime.strptime(input, format)
+    local_date = date.astimezone()
+    local_tz = local_date.tzinfo
+    local_tzname = local_tz.tzname(local_date)
+    result = f"The date and time of date {date}, {date.strftime('%A')}, {local_date}, {local_tz}, {local_tzname}"
+    print(result)
+    return result
+
+get_day_of_date_time_tool = Tool(
+    name="Get-day-of-date-and-time",
+    func=get_day_of_date_time,
+    description = (
+        "Useful when you know the day of certain date."
+        "Input is a string of date in the format of YYYY-MM-DD"
     )
 )
 
@@ -164,6 +172,106 @@ get_visits_tool = Tool(
     )
 )
 
+
+class GetDateTimeTool(BaseTool):
+    name = "get-current-date-time"
+    description = """
+        use this tool when need to get current year, date, time, or timezone info.
+    """
+    def _run(
+        self, 
+    ) -> str:
+        now = dt.datetime.now()
+        local_now = now.astimezone()
+        local_tz = local_now.tzinfo
+        local_tzname = local_tz.tzname(local_now)
+        result = f"The date and time of today is {now}, {now.strftime('%A')}, {local_now}, {local_tz}, {local_tzname}"
+        print(result)
+        return result
+
+    async def _arun(
+        self, query: str,
+    ) -> str:
+        raise NotImplementedError("custom_search does not support async")
+
+getDateTimeTool = GetDateTimeTool()
+
+
+class SetGoogleCalendarTool(BaseTool):
+    name = "set-google-calendar"
+    description = """
+        use this tool when need to schedule a new event for the user.
+        To use this tool, you need to provide the following 3 parameters:
+        [title, start_time, end_time]
+        For each parameter, below is the description
+        title: title of the event
+        start_time: event start time, in the format of YYYY-MM-DD HH:MM:SS
+        end_time: event end time, in the format of YYYY-MM-DD HH:MM:SS
+    """
+    def _run(
+        self, 
+        title: str = None,
+        start_time: str = None,
+        end_time: str = None,
+    ) -> str:
+        try:
+            # LLM put all 3 paramters into 1 for some reason
+            title, start_time, end_time = title.split(", ")
+            start_time = start_time.replace(" ", "T")
+            start_time = start_time + "-04:00"
+            end_time = end_time.replace(" ", "T")
+            end_time = end_time + "-04:00"
+            print(title)
+            print(start_time)
+            print(end_time)
+            service = build("calendar", "v3", credentials=auth_google())
+            event = {
+                "summary": title,
+                "location": "Online meeting",
+                "description": "Some more details on this event",
+                "start": {
+                    "dateTime": start_time,
+                    "timeZone": "US/Eastern"
+                },
+                "end": {
+                    "dateTime": end_time,
+                    "timeZone": "US/Eastern"
+                }
+            }
+            event = service.events().insert(calendarId="primary", body=event).execute()
+            print(event)     
+        except HttpError as error:
+            print(f"An error occurred: {error}")   
+        return "LangChain"
+
+    async def _arun(
+        self, query: str,
+    ) -> str:
+        raise NotImplementedError("custom_search does not support async")
+
+setGoogleCalendarTool = SetGoogleCalendarTool()
+
+def set_google_events(start_time, end_time, summary):
+    try:
+        service = build("calendar", "v3", credentials=auth_google())
+        event = {
+            "summary": summary,
+            "location": "Online meeting",
+            "description": "Some more details on this event",
+            "start": {
+                "dateTime": start_time,
+                "timeZone": "US/Eastern"
+            },
+            "end": {
+                "dateTime": end_time,
+                "timeZone": "US/Eastern"
+            }
+        }
+        event = service.events().insert(calendarId="primary", body=event).execute()
+        print(event)
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+
 def set_visits(input=""):
     visits = ""
     with open("visits.txt", "a") as f:
@@ -173,10 +281,12 @@ def set_visits(input=""):
 
 set_visits_tool = Tool(
     name="Set-new-visit",
-    func=set_visits,
+    func=set_google_events,
     description = (
         "Useful when user wants to schedule a new event"
-        "Input is the event in the format as below:"
-        "{YYYY-MM-DD, Start time - Finish time, Evnet title}"
+        "To use this tool the input should provide below parameters:"
+        "summary - summary of the event"
+        "start_time - event start time, in the format like 2024-03-15T08:00:00-04:00"
+        "end_time - event end time, in the format like 2024-03-15T10:00:00-04:00"
     )
 )
