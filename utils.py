@@ -3,6 +3,8 @@ import random
 import streamlit as st
 from dotenv import load_dotenv
 from langchain.agents import Tool
+from langchain.pydantic_v1 import BaseModel, Field
+# from langchain.tools import BaseTool, StructuredTool, tool
 from langchain_core.tools import tool, BaseTool
 import datetime as dt
 from google.auth.transport.requests import Request
@@ -10,6 +12,8 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from typing import Optional, Type
+from pydantic import BaseModel
 
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
@@ -197,36 +201,39 @@ class GetDateTimeTool(BaseTool):
 getDateTimeTool = GetDateTimeTool()
 
 
+class CalendarInput(BaseModel):
+    summary: str = Field(description="summary of the event")
+    start_time: str = Field(description="event start time, in the format of YYYY-MM-DD HH:MM:SS")
+    end_time: str = Field(description="event end time, in the format of YYYY-MM-DD HH:MM:SS")
+
 class SetGoogleCalendarTool(BaseTool):
     name = "set-google-calendar"
     description = """
         use this tool when need to schedule a new event for the user.
-        To use this tool, you need to provide the following 3 parameters:
-        [title, start_time, end_time]
+        To use this tool, you need to provide all 3 following parameters:
+        [summary, start_time, and end_time]
         For each parameter, below is the description
-        title: title of the event
+        summary: summary of the event
         start_time: event start time, in the format of YYYY-MM-DD HH:MM:SS
         end_time: event end time, in the format of YYYY-MM-DD HH:MM:SS
     """
+    args_schema: Type[BaseModel] = CalendarInput
+
     def _run(
         self, 
-        title: str = None,
+        summary: str = None,
         start_time: str = None,
         end_time: str = None,
     ) -> str:
         try:
-            # LLM put all 3 paramters into 1 for some reason
-            title, start_time, end_time = title.split(", ")
-            start_time = start_time.replace(" ", "T")
-            start_time = start_time + "-04:00"
-            end_time = end_time.replace(" ", "T")
-            end_time = end_time + "-04:00"
-            print(title)
+            print(summary)
             print(start_time)
             print(end_time)
+            start_time = start_time + "-04:00"
+            end_time = end_time + "-04:00"
             service = build("calendar", "v3", credentials=auth_google())
             event = {
-                "summary": title,
+                "summary": summary,
                 "location": "Online meeting",
                 "description": "Some more details on this event",
                 "start": {
