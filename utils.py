@@ -155,9 +155,18 @@ def get_google_events(input=""):
         results = []
         # Prints the start and name of the next 10 events
         for event in events:
+            print(event)
+            id = event["id"]
             start = event["start"].get("dateTime", event["start"].get("date"))
-            print(start, event["summary"])
-            results.append(", ".join([start, event["summary"]]))
+            summary = event["summary"]
+            # print(start, event["summary"])
+            # results.append(", ".join([id, start, event["summary"]]))
+            results.append({
+                "id": id,
+                "start_time": start,
+                "summary": summary,
+            })
+        print(results)
         return results
     except HttpError as error:
         print(f"An error occurred: {error}")
@@ -173,6 +182,7 @@ get_visits_tool = Tool(
     func=get_google_events,
     description = (
         "Useful when you need to answer question about user's visit plans for the future."
+        "The response is a list of events, each event contains 3 attributes, id, start_time and summary"
     )
 )
 
@@ -229,7 +239,9 @@ class SetGoogleCalendarTool(BaseTool):
             print(summary)
             print(start_time)
             print(end_time)
+            start_time = start_time.replace(" ", "T")
             start_time = start_time + "-04:00"
+            end_time = end_time.replace(" ", "T")
             end_time = end_time + "-04:00"
             service = build("calendar", "v3", credentials=auth_google())
             event = {
@@ -257,6 +269,38 @@ class SetGoogleCalendarTool(BaseTool):
         raise NotImplementedError("custom_search does not support async")
 
 setGoogleCalendarTool = SetGoogleCalendarTool()
+
+
+class CalendarIdInput(BaseModel):
+    id: str = Field(description="id of the event")
+
+class CancelGoogleCalendarTool(BaseTool):
+    name = "cancel-google-calendar"
+    description = """
+        use this tool when need to cancel or delete an event for the user.
+        To use this tool, you need to provide the parameters:
+        id: the event id
+    """
+    args_schema: Type[BaseModel] = CalendarIdInput
+
+    def _run(
+        self, 
+        id: str = None,
+    ) -> str:
+        try:
+            print(id)
+            service = build("calendar", "v3", credentials=auth_google())
+            service.events().delete(calendarId="primary", eventId=id).execute()
+        except HttpError as error:
+            print(f"An error occurred: {error}")   
+        return "LangChain"
+
+    async def _arun(
+        self, query: str,
+    ) -> str:
+        raise NotImplementedError("custom_search does not support async")
+
+cancelGoogleCalendarTool = CancelGoogleCalendarTool()
 
 def set_google_events(start_time, end_time, summary):
     try:

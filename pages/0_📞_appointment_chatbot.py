@@ -42,6 +42,7 @@ class ContextChatbot:
             utils.get_today_date_time_tool,
             utils.get_day_of_date_time_tool,
             utils.setGoogleCalendarTool,
+            utils.cancelGoogleCalendarTool,
             TavilySearchResults(max_results=1)]
         _system_message ="""
         Assistant is a large language model.
@@ -52,10 +53,14 @@ class ContextChatbot:
         Assistant does not know anything about current year or date, to answer anything 
         related to year, date, or time, the assistant needs to get the current date time first.
         All day appointment means the user is busy all day, and cannot arrange more events.
+        After user provide the summary for a new event, suggest 3 time slots which
+        do not conflict with any existing events.
         New events should only be scheduled from Monday to Friday, between 8:00 and 17:00.
         New events should not be scheduled on public holidays.
         Unless user specifies, each new event should take 1 hour.
         Unless user specifies, user should be located in the US, and use eastern time zone.
+        After a new event is scheduled, get the latest schedule information from calendar, and 
+        show user the 5 most recent upcoming events.
         """
         prompt = OpenAIFunctionsAgent.create_prompt(
             system_message=SystemMessage(content=_system_message),
