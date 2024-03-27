@@ -29,8 +29,7 @@ class ContextChatbot:
     
     @st.cache_resource
     def setup_chain(_self):
-        # memory = ConversationBufferMemory(return_messages=True)
-        llm = ChatOpenAI(model=_self.openai_model, temperature=0.2)
+        llm = ChatOpenAI(model=_self.openai_model, temperature=0)
         memory = ConversationBufferMemory(
             llm=llm, 
             memory_key="memory", 
@@ -42,6 +41,7 @@ class ContextChatbot:
             utils.get_today_date_time_tool,
             utils.get_day_of_date_time_tool,
             utils.setGoogleCalendarTool,
+            utils.updateGoogleCalendarTool,
             utils.cancelGoogleCalendarTool,
             TavilySearchResults(max_results=1)]
         _system_message ="""
@@ -58,6 +58,8 @@ class ContextChatbot:
         New events should only be scheduled from Monday to Friday, between 8:00 and 17:00.
         New events should not be scheduled on public holidays.
         Unless user specifies, each new event should take 1 hour.
+        To change an existing event, you need to provide the id of the event, which is returned
+        from the Get-current-visits tool.
         Unless user specifies, user should be located in the US, and use eastern time zone.
         After a new event is scheduled, get the latest schedule information from calendar, and 
         show user the 5 most recent upcoming events.

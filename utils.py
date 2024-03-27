@@ -220,6 +220,8 @@ class SetGoogleCalendarTool(BaseTool):
     name = "set-google-calendar"
     description = """
         use this tool when need to schedule a new event for the user.
+        do not use this tool when user ask for time slot suggestions.
+        only use this tool when user confirmed the summary, start time or time slot.
         To use this tool, you need to provide all 3 following parameters:
         [summary, start_time, and end_time]
         For each parameter, below is the description
@@ -271,15 +273,77 @@ class SetGoogleCalendarTool(BaseTool):
 setGoogleCalendarTool = SetGoogleCalendarTool()
 
 
+class CalendarUpdateInput(BaseModel):
+    id: str = Field(description="id of the event, it is a 26 character long alphanumeric string")
+    summary: str = Field(description="summary of the event")
+    start_time: str = Field(description="event start time, in the format of YYYY-MM-DD HH:MM:SS")
+    end_time: str = Field(description="event end time, in the format of YYYY-MM-DD HH:MM:SS")
+
+
+class UpdateGoogleCalendarTool(BaseTool):
+    name = "update-google-calendar"
+    description = """
+        use this tool when need to update or change an event for the user.
+        To use this tool, you need to provide the parameters:
+        id: the id of the event, it is a 26 character long alphanumeric string
+        summary: new summary of the event
+        start_time: new event start time, in the format of YYYY-MM-DD HH:MM:SS
+        end_time: new event end time, in the format of YYYY-MM-DD HH:MM:SS
+    """
+    args_schema: Type[BaseModel] = CalendarUpdateInput
+
+    def _run(
+        self, 
+        id: str = None,
+        summary: str = None,
+        start_time: str = None,
+        end_time: str = None,
+    ) -> str:
+        try:
+            print(id)
+            print(summary)
+            print(start_time)
+            print(end_time)
+            start_time = start_time.replace(" ", "T")
+            start_time = start_time + "-04:00"
+            end_time = end_time.replace(" ", "T")
+            end_time = end_time + "-04:00"
+            service = build("calendar", "v3", credentials=auth_google())
+            event = {
+                "summary": summary,
+                "location": "Online meeting",
+                "description": "Some more details on this event",
+                "start": {
+                    "dateTime": start_time,
+                    "timeZone": "US/Eastern"
+                },
+                "end": {
+                    "dateTime": end_time,
+                    "timeZone": "US/Eastern"
+                }
+            }
+            event = service.events().update(calendarId="primary", eventId=id, body=event).execute()
+            print(event)     
+        except HttpError as error:
+            print(f"An error occurred: {error}")   
+        return "LangChain"
+
+    async def _arun(
+        self, query: str,
+    ) -> str:
+        raise NotImplementedError("custom_search does not support async")
+
+updateGoogleCalendarTool = UpdateGoogleCalendarTool()
+
 class CalendarIdInput(BaseModel):
-    id: str = Field(description="id of the event")
+    id: str = Field(description="id of the event, it is a 26 character long alphanumeric string")
 
 class CancelGoogleCalendarTool(BaseTool):
     name = "cancel-google-calendar"
     description = """
         use this tool when need to cancel or delete an event for the user.
         To use this tool, you need to provide the parameters:
-        id: the event id
+        id: the event id, it is a 26 character long alphanumeric string
     """
     args_schema: Type[BaseModel] = CalendarIdInput
 
