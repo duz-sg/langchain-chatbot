@@ -4,7 +4,6 @@ langchain_openai==0.0.8
 streamlit==1.24.0
 duckduckgo-search==3.8.3
 pypdf==3.12.0
-sentence-transformers==2.2.2
 docarray==0.32.1
 langchainhub==0.1.15
 tavily-python==0.3.1
