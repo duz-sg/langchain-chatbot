@@ -7,6 +7,9 @@ It provides a comprehensive integration of various components, simplifying the p
 
 ## 💬 Sample chatbot use cases
 Here are a few examples of chatbot implementations using Langchain and Streamlit:
+-  **Appointment Chatbot** \
+  A chatbot that allow you to interact with your Google Calendar. This function requires Google Calendar API credential setup.
+
 -  **Basic Chatbot** \
   Engage in interactive conversations with the LLM.
 
@@ -24,6 +27,15 @@ Created a multi-page streamlit app containing all sample chatbot use cases. \
 You can access this app through this link: [langchain-chatbot.streamlit.app](https://langchain-chatbot.streamlit.app)
 
 ## 🖥️ Running locally
+Prepare a .env file to pass the API keys
+```
+OPENAI_API_KEY="sk-xxxxxx"
+TAVILY_API_KEY="tvly-xxxxxx" (Optional)
+```
+
+Enable Interaction with Google API in appointment chatbot (Optional)
+Setup your Google Developer Account for Google Calendar, download the credentials json to the root folder and name it credentials.json
+
 ```shell
 # Run main streamlit app
 $ streamlit run Home.py
