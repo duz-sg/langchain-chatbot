@@ -275,7 +275,7 @@ setGoogleCalendarTool = SetGoogleCalendarTool()
 
 class CalendarUpdateInput(BaseModel):
     id: str = Field(description="id of the event, it is a 26 character long alphanumeric string")
-    summary: str = Field(description="summary of the event")
+    summary: str = Field(description="new summary of the event, if user does not specify, use the existing event's old summary as input")
     start_time: str = Field(description="event start time, in the format of YYYY-MM-DD HH:MM:SS")
     end_time: str = Field(description="event end time, in the format of YYYY-MM-DD HH:MM:SS")
 
@@ -283,12 +283,12 @@ class CalendarUpdateInput(BaseModel):
 class UpdateGoogleCalendarTool(BaseTool):
     name = "update-google-calendar"
     description = """
-        use this tool when need to update or change an event for the user.
+        use this tool when need to update or change an existing event for the user.
         To use this tool, you need to provide the parameters:
         id: the id of the event, it is a 26 character long alphanumeric string
-        summary: new summary of the event
+        summary: new summary of the event, if user does not specify, use the existing event's old summary as input
         start_time: new event start time, in the format of YYYY-MM-DD HH:MM:SS
-        end_time: new event end time, in the format of YYYY-MM-DD HH:MM:SS
+        end_time: new event end time, in the format of YYYY-MM-DD HH:MM:SS, by default it is 1 hour after start_time
     """
     args_schema: Type[BaseModel] = CalendarUpdateInput
 
@@ -304,10 +304,6 @@ class UpdateGoogleCalendarTool(BaseTool):
             print(summary)
             print(start_time)
             print(end_time)
-            start_time = start_time.replace(" ", "T")
-            start_time = start_time + "-04:00"
-            end_time = end_time.replace(" ", "T")
-            end_time = end_time + "-04:00"
             service = build("calendar", "v3", credentials=auth_google())
             event = {
                 "summary": summary,

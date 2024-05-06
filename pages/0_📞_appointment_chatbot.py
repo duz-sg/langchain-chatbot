@@ -25,7 +25,7 @@ class ContextChatbot:
 
     def __init__(self):
         utils.configure_openai_api_key()
-        self.openai_model = "gpt-3.5-turbo"
+        self.openai_model = "gpt-4-turbo-preview"
     
     @st.cache_resource
     def setup_chain(_self):
@@ -60,6 +60,16 @@ class ContextChatbot:
         Unless user specifies, each new event should take 1 hour.
         To change an existing event, you need to provide the id of the event, which is returned
         from the Get-current-visits tool.
+        To list the events user, you need to provide the each event's summary, start time and end time.
+        To change an existing event, you need to provide the summary of the event, which has 2
+        options: 1. if user specify the new summary, use the new summary as input, 2. if user 
+        does not specify any new summary, you should provide the existing event's old summary as 
+        the input of new summary.
+        To change an existing event, you need to provide the start_time, which is provided by the user.
+        To change an existing event, you need to provide the end_time, if user does not specify, 
+        it is 1 hour after start_time.
+        To delete or cancel an event, use the cancelGoogleCalendarTool tool, to use this tool, you need
+        to provide the id of the event, which is returned from the Get-current-visits tool.
         Unless user specifies, user should be located in the US, and use eastern time zone.
         After a new event is scheduled, get the latest schedule information from calendar, and 
         show user the 5 most recent upcoming events.
